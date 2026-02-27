@@ -152,5 +152,4 @@ CREATE TABLE crypto_market_daily (
 ## Author
 
 **Daniel Peñero**  
-Data Engineering Internship Project  
 February 2026
