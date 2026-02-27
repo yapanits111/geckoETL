@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: crypto_etl_db
+    environment:
+      POSTGRES_DB: crypto_etl
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ETL Pipeline
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crypto_etl_pipeline
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=crypto_etl
+      - DB_USER=postgres
+      - DB_PASSWORD=password123
+      - COINS=bitcoin,ethereum,solana
+      - VS_CURRENCY=usd
+      - HISTORY_DAYS=30
+      - MAX_RETRIES=3
+      - RETRY_DELAY=5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:
