@@ -1,10 +1,6 @@
-# Daily Cryptocurrency Market Data Pipeline
+# Crypto ETL Pipeline
 
-A production-ready batch ETL pipeline that extracts cryptocurrency market data from CoinGecko API, transforms it with technical indicators, and loads it into PostgreSQL.
-
-**Built for Data Engineering Internship Showcase**
-
----
+Batch ETL pipeline that pulls crypto market data from CoinGecko, calculates technical indicators, and loads to PostgreSQL.
 
 ## Architecture
 
@@ -21,13 +17,12 @@ A production-ready batch ETL pipeline that extracts cryptocurrency market data f
 
 ## Features
 
-- **Modular ETL Design**: Clean separation of Extract, Transform, Load
-- **Idempotent Loads**: Uses PostgreSQL UPSERT (ON CONFLICT) for safe reruns
-- **Error Handling**: Exponential backoff retry logic for API calls
-- **Technical Indicators**: Daily returns, 7-day moving average, volatility
-- **Docker Ready**: Full containerization with docker-compose
-- **Structured Logging**: Timestamped logs for debugging and monitoring
-- **Data Validation**: Schema validation before loading
+- Modular E/T/L separation
+- Idempotent loads with UPSERT
+- Retry with exponential backoff
+- Technical indicators (returns, MA, volatility)
+- Docker ready
+- Schema validation
 
 ## Project Structure
 
@@ -116,21 +111,7 @@ CREATE TABLE crypto_market_daily (
 
 ## Tech Stack
 
-- **Python 3.11** - Core language
-- **Pandas** - Data transformation
-- **PostgreSQL** - Data warehouse
-- **psycopg2** - Database adapter
-- **Docker** - Containerization
-- **CoinGecko API** - Data source
-
-## Engineering Best Practices
-
-1. **Idempotency**: Safe to rerun without duplicates
-2. **Separation of Concerns**: E/T/L modules are independent
-3. **Configuration Management**: Environment-based config
-4. **Error Handling**: Graceful failures with logging
-5. **Rate Limiting**: Respects API limits (1.5s between calls)
-6. **Data Validation**: Schema checks before loading
+Python 3.11, Pandas, PostgreSQL, psycopg2, Docker, CoinGecko API
 
 ## Sample Output
 

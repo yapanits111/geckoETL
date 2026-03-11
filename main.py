@@ -1,15 +1,3 @@
-"""
-Daily Cryptocurrency Market Data Pipeline
-=========================================
-
-Main orchestrator for the ETL pipeline.
-Extracts data from CoinGecko, transforms with technical indicators,
-and loads to PostgreSQL using UPSERT for idempotency.
-
-Author: Daniel Peñero
-Date: February 2026
-"""
-
 import sys
 import os
 from datetime import datetime
@@ -27,14 +15,6 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 
 
 def save_to_csv(df, filename: str, stage: str):
-    """
-    Save DataFrame to CSV for easy viewing
-    
-    Args:
-        df: DataFrame to save
-        filename: Output filename
-        stage: Pipeline stage (raw/transformed)
-    """
     os.makedirs(DATA_DIR, exist_ok=True)
     filepath = os.path.join(DATA_DIR, filename)
     df.to_csv(filepath, index=False)
@@ -42,18 +22,11 @@ def save_to_csv(df, filename: str, stage: str):
 
 
 def run_pipeline() -> bool:
-    """
-    Execute the full ETL pipeline
-    
-    Returns:
-        True if pipeline completed successfully
-    """
     log_pipeline_start()
     
     total_records = 0
     
     try:
-        # ========== EXTRACT ==========
         logger.info("[PIPELINE] Step 1/3: EXTRACT")
         raw_data = extract_all_coins()
         
@@ -69,7 +42,6 @@ def run_pipeline() -> bool:
         save_to_csv(raw_data, f"raw_data_{timestamp}.csv", "extract")
         save_to_csv(raw_data, "raw_data_latest.csv", "extract")
         
-        # ========== TRANSFORM ==========
         logger.info("[PIPELINE] Step 2/3: TRANSFORM")
         transformed_data = transform_market_data(raw_data)
         
@@ -90,7 +62,6 @@ def run_pipeline() -> bool:
         save_to_csv(transformed_data, f"transformed_data_{timestamp}.csv", "transform")
         save_to_csv(transformed_data, "transformed_data_latest.csv", "transform")
         
-        # ========== LOAD ==========
         logger.info("[PIPELINE] Step 3/3: LOAD")
         inserted, updated = load_to_postgres(transformed_data)
         
@@ -107,7 +78,6 @@ def run_pipeline() -> bool:
 
 
 def main():
-    """Main entry point"""
     logger.info("=" * 60)
     logger.info("DAILY CRYPTOCURRENCY MARKET DATA PIPELINE")
     logger.info(f"Coins: {Config.COINS}")

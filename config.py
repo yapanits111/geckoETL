@@ -1,17 +1,10 @@
-"""
-Configuration management for Crypto ETL Pipeline
-Loads environment variables for database and API settings
-"""
-
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 
 class Config:
-    """Configuration class for the ETL pipeline"""
     
     # Database Configuration
     DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -41,7 +34,6 @@ class Config:
     
     @classmethod
     def get_db_url(cls) -> str:
-        """Get PostgreSQL connection URL"""
         return (
             f"postgresql://{cls.DB_USER}:{cls.DB_PASSWORD}"
             f"@{cls.DB_HOST}:{cls.DB_PORT}/{cls.DB_NAME}"
@@ -49,6 +41,5 @@ class Config:
     
     @classmethod
     def validate(cls) -> bool:
-        """Validate required configuration"""
         required = [cls.DB_HOST, cls.DB_NAME, cls.DB_USER, cls.DB_PASSWORD]
         return all(required)

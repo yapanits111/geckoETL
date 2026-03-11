@@ -1,8 +1,3 @@
-"""
-CoinGecko API extraction module
-Fetches cryptocurrency market data with retry logic
-"""
-
 import requests
 import time
 from datetime import datetime, timedelta
@@ -19,18 +14,7 @@ def fetch_with_retry(
     max_retries: int = None,
     retry_delay: int = None
 ) -> Optional[Dict]:
-    """
-    Fetch data from URL with retry logic and exponential backoff
-    
-    Args:
-        url: API endpoint URL
-        params: Query parameters
-        max_retries: Maximum retry attempts
-        retry_delay: Initial delay between retries (seconds)
-        
-    Returns:
-        JSON response data or None if failed
-    """
+    """Fetch data from URL with exponential backoff retry."""
     max_retries = max_retries or Config.MAX_RETRIES
     retry_delay = retry_delay or Config.RETRY_DELAY
     
@@ -62,17 +46,7 @@ def extract_market_chart(
     days: int = None,
     vs_currency: str = None
 ) -> Optional[pd.DataFrame]:
-    """
-    Extract historical market data for a cryptocurrency
-    
-    Args:
-        coin_id: CoinGecko coin ID (e.g., 'bitcoin', 'ethereum')
-        days: Number of days of historical data
-        vs_currency: Currency for price conversion
-        
-    Returns:
-        DataFrame with date, price, market_cap, volume columns
-    """
+    """Extract historical market data for a coin."""
     days = days or Config.HISTORY_DAYS
     vs_currency = vs_currency or Config.VS_CURRENCY
     
@@ -99,7 +73,6 @@ def extract_market_chart(
             logger.warning(f"[EXTRACT] No price data returned for {coin_id}")
             return None
         
-        # Convert to DataFrame
         df = pd.DataFrame({
             "timestamp": [p[0] for p in prices],
             "price": [p[1] for p in prices],
@@ -107,15 +80,11 @@ def extract_market_chart(
             "volume": [v[1] for v in volumes] if volumes else [None] * len(prices)
         })
         
-        # Convert timestamp to date
         df["date"] = pd.to_datetime(df["timestamp"], unit="ms").dt.date
         df["symbol"] = coin_id
         
-        # Drop timestamp column and duplicates (keep last value per day)
         df = df.drop(columns=["timestamp"])
         df = df.drop_duplicates(subset=["date", "symbol"], keep="last")
-        
-        # Reorder columns
         df = df[["date", "symbol", "price", "market_cap", "volume"]]
         
         log_extract(coin_id, len(df))
@@ -128,15 +97,7 @@ def extract_market_chart(
 
 
 def extract_all_coins(coins: List[str] = None) -> pd.DataFrame:
-    """
-    Extract market data for all configured coins
-    
-    Args:
-        coins: List of coin IDs to extract (uses config if not provided)
-        
-    Returns:
-        Combined DataFrame with all coin data
-    """
+    """Extract market data for all configured coins."""
     coins = coins or Config.COINS
     
     logger.info(f"[EXTRACT] Starting extraction for {len(coins)} coins: {coins}")

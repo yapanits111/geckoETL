@@ -1,8 +1,3 @@
-"""
-Transform module for cryptocurrency data
-Computes technical indicators: daily returns, moving averages, volatility
-"""
-
 import pandas as pd
 import numpy as np
 from typing import Optional
@@ -11,17 +6,7 @@ from utils.logger import logger, log_transform
 
 
 def calculate_daily_return(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Calculate daily percentage return for each coin
-    
-    daily_return = (price_today - price_yesterday) / price_yesterday * 100
-    
-    Args:
-        df: DataFrame with 'price', 'symbol', 'date' columns
-        
-    Returns:
-        DataFrame with 'daily_return' column added
-    """
+    """Calculate daily percentage return for each coin."""
     df = df.copy()
     df = df.sort_values(["symbol", "date"])
     
@@ -36,17 +21,7 @@ def calculate_moving_average(
     window: int = 7,
     column: str = "price"
 ) -> pd.DataFrame:
-    """
-    Calculate rolling moving average
-    
-    Args:
-        df: DataFrame with price data
-        window: Rolling window size (default 7 days)
-        column: Column to calculate MA on
-        
-    Returns:
-        DataFrame with moving average column added
-    """
+    """Calculate rolling moving average."""
     df = df.copy()
     df = df.sort_values(["symbol", "date"])
     
@@ -63,24 +38,12 @@ def calculate_volatility(
     df: pd.DataFrame, 
     window: int = 7
 ) -> pd.DataFrame:
-    """
-    Calculate rolling volatility (standard deviation of returns)
-    
-    Volatility is a key risk metric - higher = more price variation
-    
-    Args:
-        df: DataFrame with 'daily_return' column
-        window: Rolling window size (default 7 days)
-        
-    Returns:
-        DataFrame with volatility column added
-    """
+    """Calculate rolling volatility (std of returns)."""
     df = df.copy()
     df = df.sort_values(["symbol", "date"])
     
     volatility_column = f"volatility_{window}"
     
-    # Must have daily_return calculated first
     if "daily_return" not in df.columns:
         df = calculate_daily_return(df)
     
@@ -92,22 +55,9 @@ def calculate_volatility(
 
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Clean and prepare data for loading
-    
-    - Fill NaN values appropriately
-    - Ensure correct data types
-    - Remove duplicates
-    
-    Args:
-        df: Raw DataFrame
-        
-    Returns:
-        Cleaned DataFrame
-    """
+    """Clean and prepare data for loading."""
     df = df.copy()
     
-    # Fill NaN for first row of each symbol (no previous day for return)
     df["daily_return"] = df["daily_return"].fillna(0)
     df["ma_7"] = df["ma_7"].fillna(df["price"])
     df["volatility_7"] = df["volatility_7"].fillna(0)
@@ -129,21 +79,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def transform_market_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Full transformation pipeline for market data
-    
-    Applies:
-    1. Daily return calculation
-    2. 7-day moving average
-    3. 7-day volatility
-    4. Data cleaning
-    
-    Args:
-        df: Raw extracted DataFrame
-        
-    Returns:
-        Fully transformed DataFrame ready for loading
-    """
+    """Run full transformation pipeline on market data."""
     if df.empty:
         logger.warning("[TRANSFORM] Empty DataFrame received, skipping transformation")
         return df

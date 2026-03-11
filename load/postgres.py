@@ -1,8 +1,3 @@
-"""
-PostgreSQL loading module
-Implements UPSERT (insert or update) for idempotent loads
-"""
-
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
@@ -15,12 +10,7 @@ from utils.logger import logger, log_load
 
 
 def get_connection():
-    """
-    Create PostgreSQL database connection
-    
-    Returns:
-        psycopg2 connection object
-    """
+    """Create PostgreSQL database connection."""
     try:
         conn = psycopg2.connect(
             host=Config.DB_HOST,
@@ -37,15 +27,7 @@ def get_connection():
 
 
 def create_table_if_not_exists(conn) -> bool:
-    """
-    Create the crypto_market_daily table if it doesn't exist
-    
-    Args:
-        conn: Database connection
-        
-    Returns:
-        True if successful
-    """
+    """Create the crypto_market_daily table if it doesn't exist."""
     create_sql = """
     CREATE TABLE IF NOT EXISTS crypto_market_daily (
         date DATE NOT NULL,
@@ -83,23 +65,11 @@ def create_table_if_not_exists(conn) -> bool:
 
 
 def upsert_data(conn, df: pd.DataFrame) -> Tuple[int, int]:
-    """
-    UPSERT data into crypto_market_daily table
-    
-    Uses ON CONFLICT to update existing records (idempotent)
-    
-    Args:
-        conn: Database connection
-        df: DataFrame to load
-        
-    Returns:
-        Tuple of (inserted_count, updated_count)
-    """
+    """UPSERT data into crypto_market_daily (idempotent)."""
     if df.empty:
         logger.warning("[LOAD] Empty DataFrame, nothing to load")
         return 0, 0
     
-    # UPSERT query - inserts new records, updates existing ones
     upsert_sql = """
     INSERT INTO crypto_market_daily 
         (date, symbol, price, market_cap, volume, daily_return, ma_7, volatility_7, updated_at)
@@ -160,15 +130,7 @@ def upsert_data(conn, df: pd.DataFrame) -> Tuple[int, int]:
 
 
 def load_to_postgres(df: pd.DataFrame) -> Tuple[int, int]:
-    """
-    Main load function - connects, creates table, and upserts data
-    
-    Args:
-        df: Transformed DataFrame to load
-        
-    Returns:
-        Tuple of (inserted_count, updated_count)
-    """
+    """Main load function - connects, creates table, and upserts data."""
     logger.info(f"[LOAD] Starting load of {len(df)} records")
     
     conn = None
@@ -185,15 +147,7 @@ def load_to_postgres(df: pd.DataFrame) -> Tuple[int, int]:
 
 
 def get_latest_records(limit: int = 10) -> pd.DataFrame:
-    """
-    Utility function to fetch latest records from database
-    
-    Args:
-        limit: Number of records to fetch
-        
-    Returns:
-        DataFrame with latest records
-    """
+    """Fetch latest records from database."""
     query = f"""
     SELECT * FROM crypto_market_daily 
     ORDER BY date DESC, symbol 

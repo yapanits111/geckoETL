@@ -1,8 +1,3 @@
-"""
-Data validation utilities for Crypto ETL Pipeline
-Ensures data quality before loading
-"""
-
 import pandas as pd
 from typing import List, Tuple
 from utils.logger import logger
@@ -12,16 +7,7 @@ def validate_required_columns(
     df: pd.DataFrame, 
     required_columns: List[str]
 ) -> Tuple[bool, List[str]]:
-    """
-    Validate that DataFrame has all required columns
-    
-    Args:
-        df: DataFrame to validate
-        required_columns: List of required column names
-        
-    Returns:
-        Tuple of (is_valid, missing_columns)
-    """
+    """Check that DataFrame has all required columns."""
     missing = [col for col in required_columns if col not in df.columns]
     is_valid = len(missing) == 0
     
@@ -35,16 +21,7 @@ def validate_no_nulls(
     df: pd.DataFrame, 
     columns: List[str]
 ) -> Tuple[bool, dict]:
-    """
-    Validate that specified columns have no null values
-    
-    Args:
-        df: DataFrame to validate
-        columns: Columns to check for nulls
-        
-    Returns:
-        Tuple of (is_valid, null_counts)
-    """
+    """Check that specified columns have no null values."""
     null_counts = {}
     for col in columns:
         if col in df.columns:
@@ -64,16 +41,7 @@ def validate_date_range(
     df: pd.DataFrame, 
     date_column: str = "date"
 ) -> Tuple[bool, str]:
-    """
-    Validate date range in DataFrame
-    
-    Args:
-        df: DataFrame to validate
-        date_column: Name of date column
-        
-    Returns:
-        Tuple of (is_valid, message)
-    """
+    """Check date range in DataFrame."""
     if date_column not in df.columns:
         return False, f"Date column '{date_column}' not found"
     
@@ -90,16 +58,7 @@ def validate_positive_values(
     df: pd.DataFrame, 
     columns: List[str]
 ) -> Tuple[bool, dict]:
-    """
-    Validate that specified columns have positive values
-    
-    Args:
-        df: DataFrame to validate
-        columns: Columns to check for positive values
-        
-    Returns:
-        Tuple of (is_valid, negative_counts)
-    """
+    """Check that specified columns have positive values."""
     negative_counts = {}
     for col in columns:
         if col in df.columns:
@@ -116,18 +75,9 @@ def validate_positive_values(
 
 
 def validate_schema(df: pd.DataFrame) -> bool:
-    """
-    Full schema validation for crypto market data
-    
-    Args:
-        df: DataFrame to validate
-        
-    Returns:
-        True if all validations pass
-    """
+    """Run full schema validation for crypto market data."""
     logger.info("[VALIDATION] Starting schema validation...")
     
-    # Required columns for final output
     required = [
         "date", "symbol", "price", "market_cap", 
         "volume", "daily_return", "ma_7", "volatility_7"
