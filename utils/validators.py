@@ -80,7 +80,8 @@ def validate_schema(df: pd.DataFrame) -> bool:
     
     required = [
         "date", "symbol", "price", "market_cap", 
-        "volume", "daily_return", "ma_7", "volatility_7"
+        "volume", "daily_return", "ma_7", "volatility_7",
+        "volatility", "price_change_pct", "is_bullish"
     ]
     
     # Check required columns

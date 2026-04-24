@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from datetime import datetime
 
@@ -14,14 +15,22 @@ def setup_logger(name: str = "crypto_etl") -> logging.Logger:
     
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
+
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    logs_dir = os.path.join(project_root, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    file_handler = logging.FileHandler(os.path.join(logs_dir, "pipeline.log"))
+    file_handler.setLevel(logging.INFO)
     
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
     console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
     
     logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
     
     return logger
 

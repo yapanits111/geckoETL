@@ -37,11 +37,31 @@ services:
       - HISTORY_DAYS=30
       - MAX_RETRIES=3
       - RETRY_DELAY=5
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
       - ./logs:/app/logs
+
+  # Streamlit Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crypto_etl_dashboard
+    command: ["streamlit", "run", "dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=crypto_etl
+      - DB_USER=postgres
+      - DB_PASSWORD=password123
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8501:8501"
 
 volumes:
   postgres_data:

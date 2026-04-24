@@ -38,10 +38,22 @@ def create_table_if_not_exists(conn) -> bool:
         daily_return FLOAT,
         ma_7 FLOAT,
         volatility_7 FLOAT,
+        volatility FLOAT,
+        price_change_pct FLOAT,
+        is_bullish BOOLEAN,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (symbol, date)
     );
+
+    ALTER TABLE crypto_market_daily
+    ADD COLUMN IF NOT EXISTS volatility FLOAT;
+
+    ALTER TABLE crypto_market_daily
+    ADD COLUMN IF NOT EXISTS price_change_pct FLOAT;
+
+    ALTER TABLE crypto_market_daily
+    ADD COLUMN IF NOT EXISTS is_bullish BOOLEAN;
     
     -- Create index for faster queries by date
     CREATE INDEX IF NOT EXISTS idx_crypto_market_date 
@@ -50,13 +62,25 @@ def create_table_if_not_exists(conn) -> bool:
     -- Create index for faster queries by symbol
     CREATE INDEX IF NOT EXISTS idx_crypto_market_symbol 
     ON crypto_market_daily(symbol);
+
+    -- Compatibility view for dashboard/reporting with requested column names
+    CREATE OR REPLACE VIEW crypto_prices AS
+    SELECT
+        symbol,
+        date,
+        price,
+        daily_return,
+        ma_7 AS "7day_avg",
+        volatility,
+        is_bullish
+    FROM crypto_market_daily;
     """
     
     try:
         with conn.cursor() as cursor:
             cursor.execute(create_sql)
         conn.commit()
-        logger.info("[LOAD] Table crypto_market_daily verified/created")
+        logger.info("[LOAD] Table crypto_market_daily and view crypto_prices verified/created")
         return True
     except Exception as e:
         logger.error(f"[LOAD] Table creation failed: {str(e)}")
@@ -72,7 +96,10 @@ def upsert_data(conn, df: pd.DataFrame) -> Tuple[int, int]:
     
     upsert_sql = """
     INSERT INTO crypto_market_daily 
-        (date, symbol, price, market_cap, volume, daily_return, ma_7, volatility_7, updated_at)
+        (
+            date, symbol, price, market_cap, volume, daily_return,
+            ma_7, volatility_7, volatility, price_change_pct, is_bullish, updated_at
+        )
     VALUES %s
     ON CONFLICT (symbol, date) 
     DO UPDATE SET
@@ -82,6 +109,9 @@ def upsert_data(conn, df: pd.DataFrame) -> Tuple[int, int]:
         daily_return = EXCLUDED.daily_return,
         ma_7 = EXCLUDED.ma_7,
         volatility_7 = EXCLUDED.volatility_7,
+        volatility = EXCLUDED.volatility,
+        price_change_pct = EXCLUDED.price_change_pct,
+        is_bullish = EXCLUDED.is_bullish,
         updated_at = CURRENT_TIMESTAMP
     """
     
@@ -97,6 +127,9 @@ def upsert_data(conn, df: pd.DataFrame) -> Tuple[int, int]:
             row["daily_return"],
             row["ma_7"],
             row["volatility_7"],
+            row["volatility"],
+            row["price_change_pct"],
+            row["is_bullish"],
             datetime.utcnow()
         ))
     

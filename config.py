@@ -31,6 +31,9 @@ class Config:
     # Retry configuration
     MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))
     RETRY_DELAY = int(os.getenv("RETRY_DELAY", "5"))  # seconds
+
+    # Optional webhook notification endpoint
+    DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "").strip()
     
     @classmethod
     def get_db_url(cls) -> str:
