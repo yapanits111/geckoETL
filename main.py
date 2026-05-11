@@ -7,13 +7,11 @@ from extract.coingecko import extract_all_coins
 from transform.indicators import transform_market_data
 from load.postgres import load_to_postgres
 from utils.logger import logger, log_pipeline_start, log_pipeline_end
-from utils.notifier import WebhookNotifier
 from utils.validators import validate_schema
 
 
 # Data output directory
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-NOTIFIER = WebhookNotifier(Config.DISCORD_WEBHOOK_URL)
 
 
 def save_to_csv(df, filename: str, stage: str):
@@ -35,7 +33,6 @@ def run_pipeline() -> bool:
         
         if raw_data.empty:
             logger.error("[PIPELINE] Extraction returned no data. Aborting.")
-            NOTIFIER.pipeline_failed("Extraction returned no data")
             log_pipeline_end(success=False)
             return False
         
@@ -51,14 +48,12 @@ def run_pipeline() -> bool:
         
         if transformed_data.empty:
             logger.error("[PIPELINE] Transformation returned no data. Aborting.")
-            NOTIFIER.pipeline_failed("Transformation returned no data")
             log_pipeline_end(success=False)
             return False
         
         # Validate schema before loading
         if not validate_schema(transformed_data):
             logger.error("[PIPELINE] Schema validation failed. Aborting.")
-            NOTIFIER.pipeline_failed("Schema validation failed")
             log_pipeline_end(success=False)
             return False
         
@@ -74,11 +69,6 @@ def run_pipeline() -> bool:
         total_records = inserted + updated
         logger.info(f"[PIPELINE] Loaded {total_records} records (inserted: {inserted}, updated: {updated})")
 
-        latest_by_coin = transformed_data.sort_values(["symbol", "date"]).groupby("symbol", as_index=False).tail(1)
-        for _, row in latest_by_coin.iterrows():
-            NOTIFIER.price_alert(row["symbol"], float(row["price_change_pct"]))
-
-        NOTIFIER.pipeline_success(records=total_records, coins=transformed_data["symbol"].nunique())
         logger.info(f"[PIPELINE] Processed {len(transformed_data)} records")
         
         log_pipeline_end(success=True, records_processed=total_records)
@@ -86,7 +76,6 @@ def run_pipeline() -> bool:
         
     except Exception as e:
         logger.exception(f"[PIPELINE] Pipeline failed with error: {str(e)}")
-        NOTIFIER.pipeline_failed(str(e))
         log_pipeline_end(success=False)
         return False
 

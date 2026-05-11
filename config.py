@@ -12,6 +12,7 @@ class Config:
     DB_NAME = os.getenv("DB_NAME", "crypto_etl")
     DB_USER = os.getenv("DB_USER", "postgres")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+    DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
     
     # CoinGecko API Configuration
     COINGECKO_BASE_URL = os.getenv(
@@ -32,11 +33,11 @@ class Config:
     MAX_RETRIES = int(os.getenv("MAX_RETRIES", "3"))
     RETRY_DELAY = int(os.getenv("RETRY_DELAY", "5"))  # seconds
 
-    # Optional webhook notification endpoint
-    DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "").strip()
     
     @classmethod
     def get_db_url(cls) -> str:
+        if cls.DATABASE_URL:
+            return cls.DATABASE_URL
         return (
             f"postgresql://{cls.DB_USER}:{cls.DB_PASSWORD}"
             f"@{cls.DB_HOST}:{cls.DB_PORT}/{cls.DB_NAME}"
@@ -44,5 +45,7 @@ class Config:
     
     @classmethod
     def validate(cls) -> bool:
+        if cls.DATABASE_URL:
+            return True
         required = [cls.DB_HOST, cls.DB_NAME, cls.DB_USER, cls.DB_PASSWORD]
         return all(required)

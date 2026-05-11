@@ -1,6 +1,6 @@
-# Automated Crypto Market Data Pipeline with Webhook Alerts and Interactive Dashboard
+# Automated Crypto Market Data Pipeline and Interactive Dashboard
 
-Automated ETL pipeline that pulls crypto market data from CoinGecko, computes indicators, loads PostgreSQL, triggers Discord webhook alerts, and serves a Streamlit dashboard.
+Automated ETL pipeline that pulls crypto market data from CoinGecko, computes indicators, loads PostgreSQL, and serves a Streamlit dashboard.
 
 ## Architecture
 
@@ -13,9 +13,7 @@ Python ETL Script
     v
 PostgreSQL Database
     |
-    +--> Streamlit Dashboard (http://localhost:8501)
-    |
-    +--> Discord Webhook Alert (>5% move)
+    +--> Streamlit Dashboard
     |
     v
 Docker Compose
@@ -30,7 +28,6 @@ Docker Compose
 - Docker ready
 - Schema validation
 - Streamlit dashboard for charts and KPI monitoring
-- Discord webhook notifications for pipeline status and price alerts
 
 ## Project Structure
 
@@ -51,14 +48,12 @@ gecko/
 │   └── postgres.py      # PostgreSQL UPSERT loader
 ├── utils/
 │   ├── logger.py        # Logging utilities
-│   ├── notifier.py      # Discord webhook notifications
 │   └── validators.py    # Data validation
 ├── sql/
 │   └── schema.sql       # Database schema
 ├── logs/                # Pipeline logs
 └── screenshots/
     ├── dashboard.png    # Streamlit dashboard screenshot
-    └── discord.png      # Discord alert screenshot
 ```
 
 ## Quick Start
@@ -99,30 +94,24 @@ streamlit run dashboard.py
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DB_HOST` | localhost | PostgreSQL host |
-| `DB_PORT` | 5432 | PostgreSQL port |
+| `DB_PORT` |           | PostgreSQL port |
 | `DB_NAME` | crypto_etl | Database name |
 | `DB_USER` | postgres | Database user |
 | `DB_PASSWORD` | - | Database password |
 | `COINS` | bitcoin,ethereum,solana | Coins to track |
 | `HISTORY_DAYS` | 30 | Days of historical data |
 | `MAX_RETRIES` | 3 | API retry attempts |
-| `DISCORD_WEBHOOK_URL` | (empty) | Discord webhook for notifications |
 
 ## Project Outputs
 
 ### 1. Running Streamlit Dashboard
-- URL: `http://localhost:8501`
 - Includes:
     - Price history chart
     - Daily returns chart
     - Metrics (latest price, 7-day average, volatility)
     - Raw data table
 
-### 2. Discord Notifications
-- Pipeline success message
-- Price alert when absolute daily movement is above 5%
-
-### 3. PostgreSQL Database
+### 2. PostgreSQL Database
 - Base table: `crypto_market_daily`
 - Compatibility view: `crypto_prices` with columns:
     - `symbol`
@@ -133,7 +122,7 @@ streamlit run dashboard.py
     - `volatility`
     - `is_bullish`
 
-### 4. Log File
+### 3. Log File
 - `logs/pipeline.log`
 - Structured pipeline events including start, extract, transform, load, webhook, and completion
 
@@ -171,13 +160,12 @@ FROM crypto_market_daily;
 
 ## Tech Stack
 
-Python 3.11, Pandas, PostgreSQL, psycopg2, Streamlit, Plotly, SQLAlchemy, Docker, CoinGecko API, Discord Webhooks
+Python 3.11, Pandas, PostgreSQL, psycopg2, Streamlit, Plotly, SQLAlchemy, Docker, CoinGecko API
 
 ## Screenshots
 
-Add your real screenshots here after running:
-- Dashboard: `screenshots/dashboard.png`
-- Discord alerts: `screenshots/discord.png`
+- Dashboard: `screenshots/dashboard1.png`
+`screenshots/dashboard2.png`
 
 ## Sample Output
 
@@ -195,8 +183,3 @@ Add your real screenshots here after running:
 2025-02-01 10:00:06 | INFO | [LOAD] Loaded 90 records (inserted: 3, updated: 87)
 2025-02-01 10:00:06 | INFO | [PIPELINE] Pipeline completed successfully
 ```
-
-## Author
-
-**Daniel Peñero**  
-February 2026

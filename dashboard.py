@@ -102,10 +102,7 @@ def apply_custom_theme() -> None:
 
 
 def build_db_url() -> str:
-    return (
-        f"postgresql://{Config.DB_USER}:{Config.DB_PASSWORD}"
-        f"@{Config.DB_HOST}:{Config.DB_PORT}/{Config.DB_NAME}"
-    )
+    return Config.get_db_url()
 
 
 @st.cache_data(ttl=3600)
@@ -157,42 +154,54 @@ def main() -> None:
     for idx, (_, row) in enumerate(latest.sort_values("symbol").iterrows()):
         metric_cols[idx % len(metric_cols)].metric(row["symbol"].upper(), fmt_price(float(row["price"])))
 
-    st.subheader("Price History")
     symbol = st.selectbox("Select coin", sorted(df["symbol"].unique().tolist()))
     filtered = df[df["symbol"] == symbol].sort_values("date")
 
-    fig_price = px.line(
-        filtered,
-        x="date",
-        y="price",
-        title=f"{symbol.upper()} Price History",
-        template="plotly_white",
-    )
-    fig_price.update_traces(line={"width": 3, "color": "#2563eb"})
-    fig_price.update_layout(
-        title={"font": {"size": 22}},
-        paper_bgcolor="rgba(255,255,255,0)",
-        plot_bgcolor="rgba(255,255,255,0)",
-        margin={"l": 10, "r": 10, "t": 44, "b": 10},
-    )
-    st.plotly_chart(fig_price, use_container_width=True)
+    chart_col_left, chart_col_right = st.columns(2)
 
-    st.subheader("Daily Returns")
-    fig_returns = px.bar(
-        filtered,
-        x="date",
-        y="daily_return",
-        title=f"{symbol.upper()} Daily Returns",
-        template="plotly_white",
-    )
-    fig_returns.update_traces(marker={"color": "#0ea5e9"})
-    fig_returns.update_layout(
-        title={"font": {"size": 22}},
-        paper_bgcolor="rgba(255,255,255,0)",
-        plot_bgcolor="rgba(255,255,255,0)",
-        margin={"l": 10, "r": 10, "t": 44, "b": 10},
-    )
-    st.plotly_chart(fig_returns, use_container_width=True)
+    with chart_col_left:
+        st.subheader("Price History")
+        fig_price = px.line(
+            filtered,
+            x="date",
+            y="price",
+            title=f"{symbol.upper()} Price History",
+            template="plotly_white",
+        )
+        fig_price.update_traces(line={"width": 3, "color": "#2563eb"})
+        fig_price.update_layout(
+            title={"font": {"size": 22}},
+            font={"color": "#0f172a"},
+            legend={"font": {"color": "#0f172a"}},
+            xaxis={"titlefont": {"color": "#0f172a"}, "tickfont": {"color": "#0f172a"}},
+            yaxis={"titlefont": {"color": "#0f172a"}, "tickfont": {"color": "#0f172a"}},
+            paper_bgcolor="rgba(255,255,255,0)",
+            plot_bgcolor="rgba(255,255,255,0)",
+            margin={"l": 10, "r": 10, "t": 44, "b": 10},
+        )
+        st.plotly_chart(fig_price, use_container_width=True)
+
+    with chart_col_right:
+        st.subheader("Daily Returns")
+        fig_returns = px.bar(
+            filtered,
+            x="date",
+            y="daily_return",
+            title=f"{symbol.upper()} Daily Returns",
+            template="plotly_white",
+        )
+        fig_returns.update_traces(marker={"color": "#0ea5e9"})
+        fig_returns.update_layout(
+            title={"font": {"size": 22}},
+            font={"color": "#0f172a"},
+            legend={"font": {"color": "#0f172a"}},
+            xaxis={"titlefont": {"color": "#0f172a"}, "tickfont": {"color": "#0f172a"}},
+            yaxis={"titlefont": {"color": "#0f172a"}, "tickfont": {"color": "#0f172a"}},
+            paper_bgcolor="rgba(255,255,255,0)",
+            plot_bgcolor="rgba(255,255,255,0)",
+            margin={"l": 10, "r": 10, "t": 44, "b": 10},
+        )
+        st.plotly_chart(fig_returns, use_container_width=True)
 
     st.subheader("Raw Data")
     st.dataframe(df.sort_values(["date", "symbol"]).tail(100), use_container_width=True)
