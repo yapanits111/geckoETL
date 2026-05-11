@@ -165,7 +165,7 @@ Python 3.11, Pandas, PostgreSQL, psycopg2, Streamlit, Plotly, SQLAlchemy, Docker
 ## Screenshots
 
 - Dashboard: `screenshots/dashboard1.png`
-`screenshots/dashboard2.png`
+- `screenshots/dashboard2.png`
 
 ## Sample Output
 
