@@ -1,8 +1,7 @@
 import psycopg2
-from psycopg2 import sql
 from psycopg2.extras import execute_values
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Tuple
 
 from config import Config
@@ -107,9 +106,15 @@ def upsert_data(conn, df: pd.DataFrame) -> Tuple[int, int]:
         price_change_pct = EXCLUDED.price_change_pct,
         is_bullish = EXCLUDED.is_bullish,
         updated_at = CURRENT_TIMESTAMP
+    -- (xmax = 0) is true only for freshly INSERTed rows, false for rows that
+    -- hit the ON CONFLICT UPDATE path. This gives exact insert/update counts
+    -- for THIS batch, unlike a table-wide COUNT(*) which is wrong under any
+    -- concurrent writer.
+    RETURNING (xmax = 0) AS inserted
     """
-    
+
     # Prepare data tuples
+    now = datetime.now(timezone.utc)
     records = []
     for _, row in df.iterrows():
         records.append((
@@ -124,30 +129,20 @@ def upsert_data(conn, df: pd.DataFrame) -> Tuple[int, int]:
             row["volatility"],
             row["price_change_pct"],
             row["is_bullish"],
-            datetime.utcnow()
+            now
         ))
-    
+
     try:
         with conn.cursor() as cursor:
-            # Get count before insert
-            cursor.execute("SELECT COUNT(*) FROM crypto_market_daily")
-            count_before = cursor.fetchone()[0]
-            
-            # Execute upsert
-            execute_values(cursor, upsert_sql, records)
-            
-            # Get count after insert
-            cursor.execute("SELECT COUNT(*) FROM crypto_market_daily")
-            count_after = cursor.fetchone()[0]
-        
+            results = execute_values(cursor, upsert_sql, records, fetch=True)
+
         conn.commit()
-        
-        # Calculate inserted vs updated
-        inserted = count_after - count_before
-        updated = len(records) - inserted
-        
+
+        inserted = sum(1 for r in results if r[0])
+        updated = len(results) - inserted
+
         log_load(inserted, updated)
-        
+
         return inserted, updated
         
     except Exception as e:
@@ -175,16 +170,18 @@ def load_to_postgres(df: pd.DataFrame) -> Tuple[int, int]:
 
 def get_latest_records(limit: int = 10) -> pd.DataFrame:
     """Fetch latest records from database."""
-    query = f"""
-    SELECT * FROM crypto_market_daily 
-    ORDER BY date DESC, symbol 
-    LIMIT {limit}
+    # limit is coerced to int and passed as a bound parameter rather than
+    # interpolated into the SQL string, so it can never be an injection vector.
+    query = """
+    SELECT * FROM crypto_market_daily
+    ORDER BY date DESC, symbol
+    LIMIT %s
     """
-    
+
     conn = None
     try:
         conn = get_connection()
-        df = pd.read_sql(query, conn)
+        df = pd.read_sql(query, conn, params=(int(limit),))
         return df
     finally:
         if conn:

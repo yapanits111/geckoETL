@@ -8,8 +8,15 @@ from config import Config
 from utils.logger import logger, log_extract
 
 
+def _auth_headers() -> Dict:
+    """Return CoinGecko auth header when a Demo API key is configured."""
+    if Config.COINGECKO_API_KEY:
+        return {"x-cg-demo-api-key": Config.COINGECKO_API_KEY}
+    return {}
+
+
 def fetch_with_retry(
-    url: str, 
+    url: str,
     params: Optional[Dict] = None,
     max_retries: int = None,
     retry_delay: int = None
@@ -17,12 +24,14 @@ def fetch_with_retry(
     """Fetch data from URL with exponential backoff retry."""
     max_retries = max_retries or Config.MAX_RETRIES
     retry_delay = retry_delay or Config.RETRY_DELAY
-    
+
     for attempt in range(max_retries):
         try:
             logger.info(f"[EXTRACT] Fetching: {url} (attempt {attempt + 1})")
-            
-            response = requests.get(url, params=params, timeout=30)
+
+            response = requests.get(
+                url, params=params, headers=_auth_headers(), timeout=30
+            )
             response.raise_for_status()
             
             return response.json()
@@ -51,12 +60,15 @@ def extract_market_chart(
     vs_currency = vs_currency or Config.VS_CURRENCY
     
     url = f"{Config.COINGECKO_BASE_URL}/coins/{coin_id}/market_chart"
+    # NOTE: interval="daily" is a paid/Enterprise-only parameter on CoinGecko's
+    # public API and now returns 401 on the free tier. We omit it and let the
+    # API auto-bucket (hourly for 2-90 day windows), then collapse to one row
+    # per day in the parsing step below via drop_duplicates(keep="last").
     params = {
         "vs_currency": vs_currency,
         "days": days,
-        "interval": "daily"
     }
-    
+
     data = fetch_with_retry(url, params)
     
     if data is None:

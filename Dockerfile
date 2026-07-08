@@ -22,8 +22,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create logs directory
-RUN mkdir -p logs
+# Create a non-root user and hand over app ownership. Running containers as
+# root is a real privilege-escalation risk if the process is ever compromised.
+RUN mkdir -p logs data \
+    && useradd --create-home --uid 10001 appuser \
+    && chown -R appuser:appuser /app
+USER appuser
 
 # Run the pipeline
 CMD ["python", "main.py"]
