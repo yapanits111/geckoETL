@@ -9,13 +9,15 @@ jobs:
   etl:
     runs-on: ubuntu-latest
     env:
-      # A full DATABASE_URL (from Neon/Supabase) is all that's required.
+      # A full DATABASE_URL (from Neon/Supabase) is the only secret required.
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      # Optional overrides — safe to leave unset (code has sensible defaults).
-      COINS: ${{ vars.COINS }}
-      VS_CURRENCY: ${{ vars.VS_CURRENCY }}
-      HISTORY_DAYS: ${{ vars.HISTORY_DAYS }}
-      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+      # Optional: only set if you add these under Settings > Secrets and
+      # variables > Actions > Variables. Config.py falls back to sensible
+      # defaults (bitcoin,ethereum,solana / usd / 30 days) when unset.
+      COINS: ${{ vars.COINS || '' }}
+      VS_CURRENCY: ${{ vars.VS_CURRENCY || '' }}
+      HISTORY_DAYS: ${{ vars.HISTORY_DAYS || '' }}
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
