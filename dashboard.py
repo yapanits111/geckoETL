@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from config import Config
 
 
-st.set_page_config(page_title="Crypto Dashboard", layout="wide")
+st.set_page_config(page_title="Crypto Dashboard", page_icon="📈", layout="wide")
 
 
 def apply_custom_theme() -> None:
@@ -135,7 +135,7 @@ def main() -> None:
         f"""
         <div class="hero">
             <h1>Crypto Market Dashboard</h1>
-            <p>Live market indicators from your ETL pipeline. Last updated: {last_ts}</p>
+            <p>Daily price, returns, and volatility for {df['symbol'].nunique()} coins &middot; updated {last_ts}</p>
         </div>
         """,
         unsafe_allow_html=True,
