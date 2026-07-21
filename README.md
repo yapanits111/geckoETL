@@ -1,8 +1,6 @@
 # Automated Crypto Market Data Pipeline and Interactive Dashboard
 
-$|$ \href{https://geckoetl.streamlit.app}{Live}
-
-Automated ETL pipeline that pulls crypto market data from CoinGecko, computes indicators, loads PostgreSQL, and serves a Streamlit dashboard.
+**[Live Demo](https://geckoetl.streamlit.app)** · Automated ETL pipeline that pulls crypto market data from CoinGecko, computes technical indicators, loads PostgreSQL, and serves a Streamlit dashboard.
 
 ## Architecture
 
@@ -23,7 +21,7 @@ Docker Compose
 
 ## Features
 
-- Modular E/T/L separation
+- Modular Extract/Transform/Load separation
 - Idempotent loads with UPSERT
 - Retry with exponential backoff
 - Technical indicators (`daily_return`, `7day_avg`, `volatility`, `price_change_pct`, `is_bullish`)
@@ -44,7 +42,7 @@ gecko/
 ├── .env.example         # Environment template
 ├── extract/
 │   └── coingecko.py     # API extraction logic
-├── trans
+├── transform/
 │   └── indicators.py    # Technical indicator calculations
 ├── load/
 │   └── postgres.py      # PostgreSQL UPSERT loader
@@ -55,7 +53,8 @@ gecko/
 │   └── schema.sql       # Database schema
 ├── logs/                # Pipeline logs
 └── screenshots/
-    ├── dashboard.png    # Streamlit dashboard screenshot
+    ├── dashboard1.png   # Streamlit dashboard screenshot
+    └── dashboard2.png   # Streamlit dashboard screenshot
 ```
 
 ## Quick Start
@@ -96,7 +95,7 @@ streamlit run dashboard.py
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DB_HOST` | localhost | PostgreSQL host |
-| `DB_PORT` |           | PostgreSQL port |
+| `DB_PORT` | 5432 | PostgreSQL port |
 | `DB_NAME` | crypto_etl | Database name |
 | `DB_USER` | postgres | Database user |
 | `DB_PASSWORD` | - | Database password |
@@ -107,22 +106,21 @@ streamlit run dashboard.py
 ## Project Outputs
 
 ### 1. Running Streamlit Dashboard
-- Includes:
-    - Price history chart
-    - Daily returns chart
-    - Metrics (latest price, 7-day average, volatility)
-    - Raw data table
+- Price history chart
+- Daily returns chart
+- Metrics (latest price, 7-day average, volatility)
+- Raw data table
 
 ### 2. PostgreSQL Database
 - Base table: `crypto_market_daily`
 - Compatibility view: `crypto_prices` with columns:
-    - `symbol`
-    - `date`
-    - `price`
-    - `daily_return`
-    - `7day_avg`
-    - `volatility`
-    - `is_bullish`
+  - `symbol`
+  - `date`
+  - `price`
+  - `daily_return`
+  - `7day_avg`
+  - `volatility`
+  - `is_bullish`
 
 ### 3. Log File
 - `logs/pipeline.log`
@@ -137,12 +135,12 @@ CREATE TABLE crypto_market_daily (
     price FLOAT,
     market_cap FLOAT,
     volume FLOAT,
-        daily_return FLOAT,
-        ma_7 FLOAT,
-        volatility_7 FLOAT,
-        volatility FLOAT,
-        price_change_pct FLOAT,
-        is_bullish BOOLEAN,
+    daily_return FLOAT,
+    ma_7 FLOAT,
+    volatility_7 FLOAT,
+    volatility FLOAT,
+    price_change_pct FLOAT,
+    is_bullish BOOLEAN,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     PRIMARY KEY (symbol, date)
@@ -172,16 +170,16 @@ Python 3.11, Pandas, PostgreSQL, psycopg2, Streamlit, Plotly, SQLAlchemy, Docker
 ## Sample Output
 
 ```
-2025-02-01 10:00:00 | INFO | ============================================================
-2025-02-01 10:00:00 | INFO | DAILY CRYPTOCURRENCY MARKET DATA PIPELINE
-2025-02-01 10:00:00 | INFO | Coins: ['bitcoin', 'ethereum', 'solana']
-2025-02-01 10:00:00 | INFO | ============================================================
-2025-02-01 10:00:00 | INFO | [PIPELINE] Starting pipeline at 2025-02-01 10:00:00
-2025-02-01 10:00:00 | INFO | [PIPELINE] Step 1/3: EXTRACT
-2025-02-01 10:00:05 | INFO | [EXTRACT] Extracted 90 records for 3 coins
-2025-02-01 10:00:05 | INFO | [PIPELINE] Step 2/3: TRANSFORM
-2025-02-01 10:00:05 | INFO | [TRANSFORM] Calculated indicators for 90 records
-2025-02-01 10:00:05 | INFO | [PIPELINE] Step 3/3: LOAD
-2025-02-01 10:00:06 | INFO | [LOAD] Loaded 90 records (inserted: 3, updated: 87)
-2025-02-01 10:00:06 | INFO | [PIPELINE] Pipeline completed successfully
+2026-05-01 10:00:00 | INFO | ============================================================
+2026-05-01 10:00:00 | INFO | DAILY CRYPTOCURRENCY MARKET DATA PIPELINE
+2026-05-01 10:00:00 | INFO | Coins: ['bitcoin', 'ethereum', 'solana']
+2026-05-01 10:00:00 | INFO | ============================================================
+2026-05-01 10:00:00 | INFO | [PIPELINE] Starting pipeline at 2026-05-01 10:00:00
+2026-05-01 10:00:00 | INFO | [PIPELINE] Step 1/3: EXTRACT
+2026-05-01 10:00:05 | INFO | [EXTRACT] Extracted 90 records for 3 coins
+2026-05-01 10:00:05 | INFO | [PIPELINE] Step 2/3: TRANSFORM
+2026-05-01 10:00:05 | INFO | [TRANSFORM] Calculated indicators for 90 records
+2026-05-01 10:00:05 | INFO | [PIPELINE] Step 3/3: LOAD
+2026-05-01 10:00:06 | INFO | [LOAD] Loaded 90 records (inserted: 3, updated: 87)
+2026-05-01 10:00:06 | INFO | [PIPELINE] Pipeline completed successfully
 ```
