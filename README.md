@@ -1,5 +1,7 @@
 # Automated Crypto Market Data Pipeline and Interactive Dashboard
 
+$|$ \href{https://geckoetl.streamlit.app}{Live}
+
 Automated ETL pipeline that pulls crypto market data from CoinGecko, computes indicators, loads PostgreSQL, and serves a Streamlit dashboard.
 
 ## Architecture
